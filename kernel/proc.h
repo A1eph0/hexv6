@@ -108,4 +108,6 @@ struct proc {
 
   // added by me from here on
   int mask;
+  uint64 ctime;
+  uint64 stime;
 };

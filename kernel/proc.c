@@ -142,6 +142,9 @@ found:
   p->context.ra = (uint64)forkret;
   p->context.sp = p->kstack + PGSIZE;
 
+  // saving creation time as ctime
+  p->ctime = ticks;
+
   return p;
 }
 
@@ -166,6 +169,7 @@ freeproc(struct proc *p)
   p->xstate = 0;
   p->state = UNUSED;
   p->mask = 0;
+  p->ctime = 0;
 }
 
 // Create a user page table for a given process,
@@ -449,7 +453,7 @@ scheduler(void)
   for(;;){
     // Avoid deadlock by ensuring that devices can interrupt.
     intr_on();
-
+    #ifdef DEFAULT
     for(p = proc; p < &proc[NPROC]; p++) {
       acquire(&p->lock);
       if(p->state == RUNNABLE) {
@@ -466,6 +470,33 @@ scheduler(void)
       }
       release(&p->lock);
     }
+    #endif
+    #ifdef FCFS
+    struct proc *temp = 0;
+    for(p = proc; p < &proc[NPROC]; p++)
+      if(p->state == RUNNABLE)
+        if(temp == 0 || temp->ctime > p->ctime)
+          temp = p;
+    
+    p = temp;
+    if(p != 0)
+    {
+      acquire(&p->lock);
+       if(p->state == RUNNABLE) {
+        // Switch to chosen process.  It is the process's job
+        // to release its lock and then reacquire it
+        // before jumping back to us.
+        p->state = RUNNING;
+        c->proc = p;
+        swtch(&c->context, &p->context);
+
+        // Process is done running for now.
+        // It should have changed its p->state before coming back.
+        c->proc = 0;
+      }
+      release(&p->lock);
+    }
+    #endif
   }
 }
 

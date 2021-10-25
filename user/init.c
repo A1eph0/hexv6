@@ -48,21 +48,17 @@ main(void)
     
     #ifdef DEFAULT
     printf("\033[31;1mScheduling Policy: Round Robin (DEFAULT)\033[0;0m\n\n");
-    #else
+    #endif
     #ifdef FCFS
     printf("\033[31;1mScheduling Policy: First Come First Serve (FCFS)\033[0;0m\n\n");
-    #else
+    #endif
     #ifdef PBS
     printf("\033[31;1mScheduling Policy: Priority Based Scheduling (PBS)\033[0;0m\n\n");
-    #else
+    #endif
     #ifdef MLFQ
     printf("\033[31;1mScheduling Policy: Multi-Level Feedback Queue (MLFQ)\033[0;0m\n\n");
     #endif
-    #endif
-    #endif
-    #endif
-
-    
+ 
     pid = fork();
     if(pid < 0){
       printf("init: fork failed\n");
