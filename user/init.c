@@ -25,6 +25,44 @@ main(void)
 
   for(;;){
     printf("init: starting sh\n");
+    printf("\e[1;1H\e[2J");
+    printf("\033[32;1m\n\
+    \n\
+ ▄         ▄  ▄▄▄▄▄▄▄▄▄▄▄  ▄       ▄  ▄               ▄  ▄▄▄▄▄▄▄▄▄▄▄ \n\
+▐░▌       ▐░▌▐░░░░░░░░░░░▌▐░▌     ▐░▌▐░▌             ▐░▌▐░░░░░░░░░░░▌\n\
+▐░▌       ▐░▌▐░█▀▀▀▀▀▀▀▀▀  ▐░▌   ▐░▌  ▐░▌           ▐░▌ ▐░█▀▀▀▀▀▀▀▀▀ \n\
+▐░▌       ▐░▌▐░▌            ▐░▌ ▐░▌    ▐░▌         ▐░▌  ▐░▌          \n\
+▐░█▄▄▄▄▄▄▄█░▌▐░█▄▄▄▄▄▄▄▄▄    ▐░▐░▌      ▐░▌       ▐░▌   ▐░█▄▄▄▄▄▄▄▄▄ \n\
+▐░░░░░░░░░░░▌▐░░░░░░░░░░░▌    ▐░▌        ▐░▌     ▐░▌    ▐░░░░░░░░░░░▌\n\
+▐░█▀▀▀▀▀▀▀█░▌▐░█▀▀▀▀▀▀▀▀▀    ▐░▌░▌        ▐░▌   ▐░▌     ▐░█▀▀▀▀▀▀▀█░▌\n\
+▐░▌       ▐░▌▐░▌            ▐░▌ ▐░▌        ▐░▌ ▐░▌      ▐░▌       ▐░▌\n\
+▐░▌       ▐░▌▐░█▄▄▄▄▄▄▄▄▄  ▐░▌   ▐░▌        ▐░▐░▌       ▐░█▄▄▄▄▄▄▄█░▌\n\
+▐░▌       ▐░▌▐░░░░░░░░░░░▌▐░▌     ▐░▌        ▐░▌        ▐░░░░░░░░░░░▌\n\
+ ▀         ▀  ▀▀▀▀▀▀▀▀▀▀▀  ▀       ▀          ▀          ▀▀▀▀▀▀▀▀▀▀▀ \n\
+  \n\
+  \n\
+  Weclome to Hrishi's Extension of XV6\n\
+  © Hrishi Narayanan 2021\n\
+  \033[0;0m\n");
+
+    
+    #ifdef DEFAULT
+    printf("\033[31;1mScheduling Policy: Round Robin (DEFAULT)\033[0;0m\n\n");
+    #else
+    #ifdef FCFS
+    printf("\033[31;1mScheduling Policy: First Come First Serve (FCFS)\033[0;0m\n\n");
+    #else
+    #ifdef PBS
+    printf("\033[31;1mScheduling Policy: Priority Based Scheduling (PBS)\033[0;0m\n\n");
+    #else
+    #ifdef MLFQ
+    printf("\033[31;1mScheduling Policy: Multi-Level Feedback Queue (MLFQ)\033[0;0m\n\n");
+    #endif
+    #endif
+    #endif
+    #endif
+
+    
     pid = fork();
     if(pid < 0){
       printf("init: fork failed\n");
