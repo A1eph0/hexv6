@@ -95,3 +95,22 @@ sys_uptime(void)
   release(&tickslock);
   return xticks;
 }
+
+// added by me from here on
+uint64
+sys_strace(void)
+{
+  int mask;
+  
+  if(argint(0, &mask) < 0)
+    return -1;
+
+  struct proc *process = myproc();
+
+  if(process -> mask > 0)
+    return -1;
+  
+  process->mask = mask;
+
+  return 0;
+}
