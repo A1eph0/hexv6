@@ -142,6 +142,15 @@ found:
   p->context.ra = (uint64)forkret;
   p->context.sp = p->kstack + PGSIZE;
 
+  // setting priority
+  p->priority = 60;
+  p->spriority = 60;
+  p->niceness = 5;
+  p->runs = 0;
+
+  p->rtime = 0;
+  p->stime = 0;
+
   // saving creation time as ctime
   p->ctime = ticks;
 
@@ -170,6 +179,12 @@ freeproc(struct proc *p)
   p->state = UNUSED;
   p->mask = 0;
   p->ctime = 0;
+  p->rtime = 0;
+  p->stime = 0;
+  p->priority = 0;
+  p->spriority = 0;
+  p->niceness = 0;
+  p->runs = 0;
 }
 
 // Create a user page table for a given process,
@@ -474,10 +489,13 @@ scheduler(void)
     #ifdef FCFS
     struct proc *temp = 0;
     for(p = proc; p < &proc[NPROC]; p++)
+    {
+      acquire(&p->lock);
       if(p->state == RUNNABLE)
         if(temp == 0 || temp->ctime > p->ctime)
           temp = p;
-    
+      release(&p->lock);
+    }
     p = temp;
     if(p != 0)
     {
@@ -487,6 +505,39 @@ scheduler(void)
         // to release its lock and then reacquire it
         // before jumping back to us.
         p->state = RUNNING;
+        c->proc = p;
+        swtch(&c->context, &p->context);
+
+        // Process is done running for now.
+        // It should have changed its p->state before coming back.
+        c->proc = 0;
+      }
+      release(&p->lock);
+    }
+    #endif
+    #ifdef PBS
+    struct proc *temp = 0;
+    for(p = proc; p < &proc[NPROC]; p++)
+    {
+      acquire(&p->lock);
+      if(p->state == RUNNABLE)
+        if(temp == 0 || temp->priority > p->priority || (temp->priority == p->priority && temp->runs > p->runs) || (temp->priority == p->priority && temp->ctime > p->ctime))
+          temp = p;
+      release(&p->lock);
+    }
+    p = temp;
+    if(p != 0)
+    {
+      acquire(&p->lock);
+       if(p->state == RUNNABLE) {
+        // Switch to chosen process.  It is the process's job
+        // to release its lock and then reacquire it
+        // before jumping back to us.
+        p->state = RUNNING;
+        p->stime = 0;
+        p->rtime = 0;
+        p->niceness = 5;
+        p->runs++;
         c->proc = p;
         swtch(&c->context, &p->context);
 
@@ -688,5 +739,28 @@ procdump(void)
       state = "???";
     printf("%d %s %s", p->pid, state, p->name);
     printf("\n");
+  }
+}
+
+void
+update_vals()
+{
+  struct proc* p;
+  for (p = proc; p < &proc[NPROC]; p++) {
+    acquire(&p->lock);
+    if (p->state == SLEEPING)
+      p->stime++;
+    if (p->state == RUNNING)
+      p->rtime++;
+    if(p->rtime != 0 || p->stime !=0)
+      p->niceness = (p->stime*10)/(p->stime+p->rtime);
+
+    p->priority = p->spriority - p->niceness + 5;
+    if(p->priority< 0)
+      p->priority = 0;
+    else if(p->priority>100)
+      p->priority = 100;
+
+    release(&p->lock); 
   }
 }

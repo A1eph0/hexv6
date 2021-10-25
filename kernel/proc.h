@@ -110,4 +110,9 @@ struct proc {
   int mask;
   uint64 ctime;
   uint64 stime;
+  uint64 rtime;
+  int spriority;
+  int priority;
+  int niceness;
+  int runs;
 };
