@@ -114,5 +114,5 @@ struct proc {
   int spriority;
   int priority;
   int niceness;
-  int runs;
+  int nrun;
 };

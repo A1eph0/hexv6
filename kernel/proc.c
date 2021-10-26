@@ -146,7 +146,7 @@ found:
   p->priority = 60;
   p->spriority = 60;
   p->niceness = 5;
-  p->runs = 0;
+  p->nrun = 0;
 
   p->rtime = 0;
   p->stime = 0;
@@ -184,7 +184,7 @@ freeproc(struct proc *p)
   p->priority = 0;
   p->spriority = 0;
   p->niceness = 0;
-  p->runs = 0;
+  p->nrun = 0;
 }
 
 // Create a user page table for a given process,
@@ -537,7 +537,7 @@ scheduler(void)
         p->stime = 0;
         p->rtime = 0;
         p->niceness = 5;
-        p->runs++;
+        p->nrun++;
         c->proc = p;
         swtch(&c->context, &p->context);
 
