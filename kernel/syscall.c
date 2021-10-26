@@ -174,14 +174,15 @@ syscall(void)
 
   num = p->trapframe->a7;
   if(num > 0 && num < NELEM(syscalls) && syscalls[num]) {
+    int temp_trap = p->trapframe->a0;
     p->trapframe->a0 = syscalls[num]();
 
     if (p->mask & (int)1<<num)
     {
-      printf("%d: syscall %s ( ", p->pid, syscall_name[num]);
+      printf("%d: syscall %s ( %d ", p->pid, syscall_name[num], temp_trap);
       
       int temp;
-      for(int i=0; i < syscall_argc[num-1]; i++)
+      for(int i=1; i < syscall_argc[num-1]; i++)
       {
           argint(i, &temp);
           printf("%d ", temp);

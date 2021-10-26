@@ -810,6 +810,7 @@ priority_updater(int new_priority, int pid)
     {
       temp = p->spriority;
       p->spriority = new_priority;
+      p->niceness = 5;
     }
     release(&p->lock); 
   }
