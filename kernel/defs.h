@@ -106,6 +106,7 @@ int             either_copyin(void *dst, int user_src, uint64 src, uint64 len);
 void            procdump(void);
 void            update_vals(void);
 void            priority_updater(int new_priority, int pid);
+int             waitx(uint64, uint*, uint*);
 
 // swtch.S
 void            swtch(struct context*, struct context*);
