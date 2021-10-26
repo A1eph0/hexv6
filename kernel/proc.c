@@ -149,7 +149,17 @@ found:
   p->nrun = 0;
 
   p->rtime = 0;
+  p->rtime_whole = 0;
+  p->wtime = 0;
+  p->wtime_q = 0;
   p->stime = 0;
+
+  p->curr_q = 0; 
+  p->q_0 = 0;
+  p->q_1 = 0;
+  p->q_2 = 0;
+  p->q_3 = 0;
+  p->q_4 = 0;
 
   // saving creation time as ctime
   p->ctime = ticks;
@@ -180,11 +190,20 @@ freeproc(struct proc *p)
   p->mask = 0;
   p->ctime = 0;
   p->rtime = 0;
+  p->rtime_whole = 0;
+  p->wtime = 0;
+  p->wtime_q = 0;
   p->stime = 0;
   p->priority = 0;
   p->spriority = 0;
   p->niceness = 0;
   p->nrun = 0;
+  p->curr_q = 0;
+  p->q_0 = 0;
+  p->q_1 = 0;
+  p->q_2 = 0;
+  p->q_3 = 0;
+  p->q_4 = 0;
 }
 
 // Create a user page table for a given process,
@@ -748,14 +767,27 @@ update_vals()
   struct proc* p;
   for (p = proc; p < &proc[NPROC]; p++) {
     acquire(&p->lock);
+    
     if (p->state == SLEEPING)
       p->stime++;
+    
     if (p->state == RUNNING)
+    {
       p->rtime++;
+      p->rtime_whole++;
+    }
+
+    if (p->state == RUNNABLE || p->state != RUNNING)
+    {
+      p->wtime++;
+      p->wtime_q++;
+    }
+
     if(p->rtime != 0 || p->stime !=0)
       p->niceness = (p->stime*10)/(p->stime+p->rtime);
 
     p->priority = p->spriority - p->niceness + 5;
+    
     if(p->priority< 0)
       p->priority = 0;
     else if(p->priority>100)

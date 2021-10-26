@@ -111,8 +111,20 @@ struct proc {
   uint64 ctime;
   uint64 stime;
   uint64 rtime;
+  uint64 rtime_whole;
+  uint64 wtime;
+  uint64 wtime_q;
+
   int spriority;
   int priority;
   int niceness;
+  
   int nrun;
+
+  int curr_q;
+  int q_0;
+  int q_1;
+  int q_2;
+  int q_3;
+  int q_4;
 };
