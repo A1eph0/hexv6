@@ -764,3 +764,22 @@ update_vals()
     release(&p->lock); 
   }
 }
+
+void
+priority_updater(int new_priority, int pid)
+{
+  int temp = -1;
+  struct proc* p;
+  for (p = proc; p < &proc[NPROC]; p++) {
+    acquire(&p->lock);
+    if (p->pid == pid)
+    {
+      temp = p->spriority;
+      p->spriority = new_priority;
+    }
+    release(&p->lock); 
+  }
+  
+  if(temp != -1 && temp > new_priority)
+    yield();
+}

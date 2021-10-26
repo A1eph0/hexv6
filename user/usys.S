@@ -110,3 +110,8 @@ strace:
  li a7, SYS_strace
  ecall
  ret
+.global set_priority
+set_priority:
+ li a7, SYS_set_priority
+ ecall
+ ret

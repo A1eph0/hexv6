@@ -114,3 +114,17 @@ sys_strace(void)
 
   return 0;
 }
+
+uint64
+sys_set_priority(void)
+{
+  int new_priority;
+  int pid;
+
+  argint(0, &new_priority);
+  argint(0, &pid);
+  
+  priority_updater(new_priority, pid);
+
+  return 0;
+}
