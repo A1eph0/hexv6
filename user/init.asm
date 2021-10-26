@@ -51,12 +51,12 @@ main(void)
     printf("\033[32;1m\n\
   4c:	00001997          	auipc	s3,0x1
   50:	8c498993          	addi	s3,s3,-1852 # 910 <malloc+0x118>
-  © Hrishi Narayanan 2021\n\
-  \033[0;0m\n");
-
-    
-    #ifdef DEFAULT
-    printf("\033[31;1mScheduling Policy: Round Robin (DEFAULT)\033[0;0m\n\n");
+    #endif
+    #ifdef FCFS
+    printf("\033[31;1mScheduling Policy: First Come First Serve (FCFS)\033[0;0m\n\n");
+    #endif
+    #ifdef PBS
+    printf("\033[31;1mScheduling Policy: Priority Based Scheduling (PBS)\033[0;0m\n\n");
   54:	00001917          	auipc	s2,0x1
   58:	f6c90913          	addi	s2,s2,-148 # fc0 <malloc+0x7c8>
     printf("init: starting sh\n");
@@ -71,7 +71,7 @@ main(void)
   70:	854e                	mv	a0,s3
   72:	00000097          	auipc	ra,0x0
   76:	6c8080e7          	jalr	1736(ra) # 73a <printf>
-    printf("\033[31;1mScheduling Policy: Round Robin (DEFAULT)\033[0;0m\n\n");
+    printf("\033[31;1mScheduling Policy: Priority Based Scheduling (PBS)\033[0;0m\n\n");
   7a:	854a                	mv	a0,s2
   7c:	00000097          	auipc	ra,0x0
   80:	6be080e7          	jalr	1726(ra) # 73a <printf>
@@ -108,7 +108,7 @@ main(void)
   a2:	fe0559e3          	bgez	a0,94 <main+0x94>
         printf("init: wait returned an error\n");
   a6:	00001517          	auipc	a0,0x1
-  aa:	f8a50513          	addi	a0,a0,-118 # 1030 <malloc+0x838>
+  aa:	f9a50513          	addi	a0,a0,-102 # 1040 <malloc+0x848>
   ae:	00000097          	auipc	ra,0x0
   b2:	68c080e7          	jalr	1676(ra) # 73a <printf>
         exit(1);
@@ -131,7 +131,7 @@ main(void)
   e6:	b789                	j	28 <main+0x28>
       printf("init: fork failed\n");
   e8:	00001517          	auipc	a0,0x1
-  ec:	f1050513          	addi	a0,a0,-240 # ff8 <malloc+0x800>
+  ec:	f2050513          	addi	a0,a0,-224 # 1008 <malloc+0x810>
   f0:	00000097          	auipc	ra,0x0
   f4:	64a080e7          	jalr	1610(ra) # 73a <printf>
       exit(1);
@@ -140,14 +140,14 @@ main(void)
   fe:	2b0080e7          	jalr	688(ra) # 3aa <exit>
       exec("sh", argv);
  102:	00001597          	auipc	a1,0x1
- 106:	f6e58593          	addi	a1,a1,-146 # 1070 <argv>
+ 106:	f7e58593          	addi	a1,a1,-130 # 1080 <argv>
  10a:	00001517          	auipc	a0,0x1
- 10e:	f0650513          	addi	a0,a0,-250 # 1010 <malloc+0x818>
+ 10e:	f1650513          	addi	a0,a0,-234 # 1020 <malloc+0x828>
  112:	00000097          	auipc	ra,0x0
  116:	2d0080e7          	jalr	720(ra) # 3e2 <exec>
       printf("init: exec sh failed\n");
  11a:	00001517          	auipc	a0,0x1
- 11e:	efe50513          	addi	a0,a0,-258 # 1018 <malloc+0x820>
+ 11e:	f0e50513          	addi	a0,a0,-242 # 1028 <malloc+0x830>
  122:	00000097          	auipc	ra,0x0
  126:	618080e7          	jalr	1560(ra) # 73a <printf>
       exit(1);
@@ -882,7 +882,7 @@ printint(int fd, int xx, int base, int sgn)
     buf[i++] = digits[x % base];
  4a4:	2601                	sext.w	a2,a2
  4a6:	00001517          	auipc	a0,0x1
- 4aa:	bb250513          	addi	a0,a0,-1102 # 1058 <digits>
+ 4aa:	bc250513          	addi	a0,a0,-1086 # 1068 <digits>
  4ae:	883a                	mv	a6,a4
  4b0:	2705                	addiw	a4,a4,1
  4b2:	02c5f7bb          	remuw	a5,a1,a2
@@ -992,7 +992,7 @@ vprintf(int fd, const char *fmt, va_list ap)
  56e:	07000d93          	li	s11,112
     putc(fd, digits[x >> (sizeof(uint64) * 8 - 4)]);
  572:	00001b97          	auipc	s7,0x1
- 576:	ae6b8b93          	addi	s7,s7,-1306 # 1058 <digits>
+ 576:	af6b8b93          	addi	s7,s7,-1290 # 1068 <digits>
  57a:	a839                	j	598 <vprintf+0x6a>
         putc(fd, c);
  57c:	85ca                	mv	a1,s2
@@ -1146,7 +1146,7 @@ vprintf(int fd, const char *fmt, va_list ap)
  6b0:	bdf9                	j	58e <vprintf+0x60>
           s = "(null)";
  6b2:	00001917          	auipc	s2,0x1
- 6b6:	99e90913          	addi	s2,s2,-1634 # 1050 <malloc+0x858>
+ 6b6:	9ae90913          	addi	s2,s2,-1618 # 1060 <malloc+0x868>
         while(*s != 0){
  6ba:	02800593          	li	a1,40
  6be:	bff1                	j	69a <vprintf+0x16c>
@@ -1269,7 +1269,7 @@ free(void *ap)
  776:	ff050693          	addi	a3,a0,-16
   for(p = freep; !(bp > p && bp < p->s.ptr); p = p->s.ptr)
  77a:	00001797          	auipc	a5,0x1
- 77e:	9067b783          	ld	a5,-1786(a5) # 1080 <freep>
+ 77e:	9167b783          	ld	a5,-1770(a5) # 1090 <freep>
  782:	a805                	j	7b2 <free+0x42>
     if(p >= p->s.ptr && (bp > p || bp < p->s.ptr))
       break;
@@ -1328,7 +1328,7 @@ free(void *ap)
  7e8:	e394                	sd	a3,0(a5)
   freep = p;
  7ea:	00001717          	auipc	a4,0x1
- 7ee:	88f73b23          	sd	a5,-1898(a4) # 1080 <freep>
+ 7ee:	8af73323          	sd	a5,-1882(a4) # 1090 <freep>
 }
  7f2:	6422                	ld	s0,8(sp)
  7f4:	0141                	addi	sp,sp,16
@@ -1363,7 +1363,7 @@ malloc(uint nbytes)
  81a:	0485                	addi	s1,s1,1
   if((prevp = freep) == 0){
  81c:	00001517          	auipc	a0,0x1
- 820:	86453503          	ld	a0,-1948(a0) # 1080 <freep>
+ 820:	87453503          	ld	a0,-1932(a0) # 1090 <freep>
  824:	c515                	beqz	a0,850 <malloc+0x58>
     base.s.ptr = freep = prevp = &base;
     base.s.size = 0;
@@ -1388,15 +1388,15 @@ malloc(uint nbytes)
     }
     if(p == freep)
  844:	00001917          	auipc	s2,0x1
- 848:	83c90913          	addi	s2,s2,-1988 # 1080 <freep>
+ 848:	84c90913          	addi	s2,s2,-1972 # 1090 <freep>
   if(p == (char*)-1)
  84c:	5afd                	li	s5,-1
  84e:	a88d                	j	8c0 <malloc+0xc8>
     base.s.ptr = freep = prevp = &base;
  850:	00001797          	auipc	a5,0x1
- 854:	83878793          	addi	a5,a5,-1992 # 1088 <base>
+ 854:	84878793          	addi	a5,a5,-1976 # 1098 <base>
  858:	00001717          	auipc	a4,0x1
- 85c:	82f73423          	sd	a5,-2008(a4) # 1080 <freep>
+ 85c:	82f73c23          	sd	a5,-1992(a4) # 1090 <freep>
  860:	e39c                	sd	a5,0(a5)
     base.s.size = 0;
  862:	0007a423          	sw	zero,8(a5)
@@ -1416,7 +1416,7 @@ malloc(uint nbytes)
  87a:	0137a423          	sw	s3,8(a5)
       freep = prevp;
  87e:	00001717          	auipc	a4,0x1
- 882:	80a73123          	sd	a0,-2046(a4) # 1080 <freep>
+ 882:	80a73923          	sd	a0,-2030(a4) # 1090 <freep>
       return (void*)(p + 1);
  886:	01078513          	addi	a0,a5,16
       if((p = morecore(nunits)) == 0)

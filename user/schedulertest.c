@@ -28,9 +28,9 @@ int main() {
           printf("Process %d finished\n", n);
           exit(0);
       } else {
-// #ifdef PBS
-//         set_priority(80, pid); // Will only matter for PBS, set lower priority for IO bound processes 
-// #endif
+#ifdef PBS
+        set_priority(80, pid); // Will only matter for PBS, set lower priority for IO bound processes 
+#endif
       }
   }
   for(;n > 0; n--) {
