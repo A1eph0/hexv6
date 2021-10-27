@@ -779,12 +779,6 @@ update_vals()
       p->rtime_whole++;
     }
 
-    if (p->state == RUNNABLE || p->state != RUNNING)
-    {
-      p->wtime++;
-      p->wtime_q++;
-    }
-
     if(p->rtime != 0 || p->stime !=0)
       p->niceness = (p->stime*10)/(p->stime+p->rtime);
 
@@ -820,7 +814,7 @@ priority_updater(int new_priority, int pid)
 }
 
 int
-waitx(uint64 addr, uint* rtime, uint* wtime)
+waitx(uint64 addr, uint* rtime_whole, uint* wtime_whole)
 {
   struct proc *np;
   int havekids, pid;
@@ -840,8 +834,8 @@ waitx(uint64 addr, uint* rtime, uint* wtime)
         if(np->state == ZOMBIE){
           // Found one.
           pid = np->pid;
-          *rtime = np->rtime;
-          *wtime = np->etime - np->ctime - np->rtime;
+          *rtime_whole = np->rtime_whole;
+          *wtime_whole = np->etime - np->ctime - np->rtime_whole;
           if(addr != 0 && copyout(p->pagetable, addr, (char *)&np->xstate,
                                   sizeof(np->xstate)) < 0) {
             release(&np->lock);
