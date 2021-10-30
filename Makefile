@@ -163,11 +163,13 @@ QEMUGDB = $(shell if $(QEMU) -help | grep -q '^-gdb'; \
 	else echo "-s -p $(GDBPORT)"; fi)
 
 
+
+ifndef CPUS
 ifeq ($(SCHEDULER), MLFQ)
 CPUS := 1
-endif
-ifndef CPUS
+else
 CPUS := 3
+endif
 endif
 
 QEMUOPTS = -machine virt -bios none -kernel $K/kernel -m 128M -smp $(CPUS) -nographic

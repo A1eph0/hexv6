@@ -26,6 +26,18 @@ struct proc *queues[5][NPROC];
 uint64 q_index[5] = {-1, -1, -1, -1, -1};
 uint64 q_ticks[5] = {1, 2, 4, 8, 16};
 
+int strcmp(const char *x, const char *y)
+{
+    while (*x)
+    {
+        if (*x != *y)
+            break;
+        x++;
+        y++;
+    }
+    return *(const unsigned char*)x - *(const unsigned char*)y;
+}
+
 void init_queues(void)
 {
   for(int i = 0; i<5; i++)
@@ -68,7 +80,6 @@ void pop(struct proc *p)
   
   queues[q][q_index[q]] = 0;
   q_index[q]--;
-  p->curr_q = -1;
 }
 
 // helps ensure that wakeups of wait()ing
@@ -198,12 +209,15 @@ found:
   p->spriority = 60;
   p->niceness = 5;
   p->nrun = 0;
+  p->nrun_whole = 0;
 
   p->atime = 0;
   p->rtime = 0;
   p->rtime_whole = 0;
+  p->rtime_every = 0;
   p->wtime = 0;
-  p->wtime_q = 0;
+  p->wtime_whole = 0;
+  p->wtime_every = 0;
   p->stime = 0;
   p->etime = 0;
 
@@ -245,13 +259,16 @@ freeproc(struct proc *p)
   p->ctime = 0;
   p->rtime = 0;
   p->rtime_whole = 0;
+  p->rtime_every = 0;
   p->wtime = 0;
-  p->wtime_q = 0;
+  p->wtime_whole = 0;
+  p->wtime_every = 0;
   p->stime = 0;
   p->priority = 0;
   p->spriority = 0;
   p->niceness = 0;
   p->nrun = 0;
+  p->nrun_whole = 0;
   p->curr_q = 0;
   p->q_val[0] = 0;
   p->q_val[1] = 0;
@@ -561,6 +578,7 @@ scheduler(void)
         // to release its lock and then reacquire it
         // before jumping back to us.
         p->state = RUNNING;
+        p->nrun_whole++;
         c->proc = p;
         swtch(&c->context, &p->context);
 
@@ -590,6 +608,7 @@ scheduler(void)
         // to release its lock and then reacquire it
         // before jumping back to us.
         p->state = RUNNING;
+        p->nrun_whole++;
         c->proc = p;
         swtch(&c->context, &p->context);
 
@@ -623,6 +642,7 @@ scheduler(void)
         p->rtime = 0;
         p->niceness = 5;
         p->nrun++;
+        p->nrun_whole++;
         c->proc = p;
         swtch(&c->context, &p->context);
 
@@ -672,6 +692,7 @@ scheduler(void)
         p->rtime = 0;
         p->wtime = 0;
         p->nrun++;
+        p->nrun_whole++;
         p->atime = 0;
         p->q_val[p->curr_q]++;
         c->proc = p;
@@ -870,6 +891,18 @@ procdump(void)
   char *state;
 
   printf("\n");
+  #ifdef DEFAULT
+    printf("PID\tState\trtime\twtime\tnrun\n");
+  #endif
+  #ifdef FCFS
+    printf("PID\tState\trtime\twtime\tnrun\n");
+  #endif 
+  #ifdef PBS
+    printf("PID\tPriority\tState\trtime\twtime\tnrun\n");
+  #endif 
+  #ifdef MLFQ
+    printf("PID\tPriority\tState\trtime\twtime\tnrun\tq0\tq1\tq2\tq3\tq4\n");
+  #endif 
   for(p = proc; p < &proc[NPROC]; p++){
     if(p->state == UNUSED)
       continue;
@@ -877,7 +910,21 @@ procdump(void)
       state = states[p->state];
     else
       state = "???";
-    printf("%d %s %s", p->pid, state, p->name);
+    #ifdef DEFAULT
+    printf("%d\t%s\t%d\t%d\t%d\n", p->pid, state, p->rtime_every, p->wtime_every, p->nrun_whole);
+    #endif
+    #ifdef FCFS
+    printf("%d\t%s\t%d\t%d\t%d\n", p->pid, state, p->rtime_every, p->wtime_every, p->nrun_whole);
+    #endif
+    #ifdef PBS
+    printf("%d\t%d\t\t%s\t%d\t%d\t%d\n", p->pid, p->priority, state, p->rtime_every, p->wtime_every, p->nrun_whole);
+    #endif
+    #ifdef MLFQ
+    int temp = -1;
+    if(strcmp(state, "zombie") != 0)
+      temp = p->curr_q;
+    printf("%d\t%d\t\t%s\t%d\t%d\t%d\t%d\t%d\t%d\t%d\t%d\n", p->pid, temp, state, p->rtime_every, p->wtime_every, p->nrun_whole, p->q_val[0], p->q_val[1], p->q_val[2], p->q_val[3], p->q_val[4]);
+    #endif
     printf("\n");
   }
 }
@@ -895,12 +942,12 @@ update_vals()
     if (p->state == RUNNING)
     {
       p->rtime++;
-      p->rtime_whole++;
+      p->rtime_every++;
     }
     else
     {
       p->wtime++;
-      p->wtime_q++;
+      p->wtime_every++;
     }
 
     if(p->rtime != 0 || p->stime !=0)
