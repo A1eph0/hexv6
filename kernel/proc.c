@@ -897,6 +897,11 @@ update_vals()
       p->rtime++;
       p->rtime_whole++;
     }
+    else
+    {
+      p->wtime++;
+      p->wtime_q++;
+    }
 
     if(p->rtime != 0 || p->stime !=0)
       p->niceness = (p->stime*10)/(p->stime+p->rtime);

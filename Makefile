@@ -166,9 +166,9 @@ QEMUGDB = $(shell if $(QEMU) -help | grep -q '^-gdb'; \
 ifeq ($(SCHEDULER), MLFQ)
 CPUS := 1
 endif
-# ifndef CPUS
-# CPUS := 3
-# endif
+ifndef CPUS
+CPUS := 3
+endif
 
 QEMUOPTS = -machine virt -bios none -kernel $K/kernel -m 128M -smp $(CPUS) -nographic
 QEMUOPTS += -drive file=fs.img,if=none,format=raw,id=x0
