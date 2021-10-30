@@ -20,6 +20,57 @@ static void freeproc(struct proc *p);
 
 extern char trampoline[]; // trampoline.S
 
+#define AGE_LIMIT 64
+
+struct proc *queues[5][NPROC];
+uint64 q_index[5] = {-1, -1, -1, -1, -1};
+uint64 q_ticks[5] = {1, 2, 4, 8, 16};
+
+void init_queues(void)
+{
+  for(int i = 0; i<5; i++)
+    for(int j = 0; j<NPROC; j++)
+      queues[i][j] = 0;
+}
+
+void push(struct proc *p, int q)
+{
+  if (q < 0)
+    q = 0;
+  if (q > 4)
+    q = 4;
+  
+  q_index[q]++;
+  queues[q][q_index[q]] = p;
+  p->curr_q = q;
+  p->rtime = 0;
+  p->wtime = 0;
+  p->atime = 0;
+}
+
+void pop(struct proc *p)
+{
+  int temp = -1;
+  int q = p->curr_q;
+  if (q < 0)
+    q = 0;
+  if (q > 4)
+    q = 4;
+  for(int i = 0; i<q_index[q]+1; i++)
+    if(p->pid == queues[q][i]->pid)
+      temp = i;
+  
+  if(temp == -1)
+    return;
+  
+  for(int i = temp; i<q_index[q]; i++)
+    queues[q][i] = queues[q][i+1];
+  
+  queues[q][q_index[q]] = 0;
+  q_index[q]--;
+  p->curr_q = -1;
+}
+
 // helps ensure that wakeups of wait()ing
 // parents are not lost. helps obey the
 // memory model when using p->parent.
@@ -148,6 +199,7 @@ found:
   p->niceness = 5;
   p->nrun = 0;
 
+  p->atime = 0;
   p->rtime = 0;
   p->rtime_whole = 0;
   p->wtime = 0;
@@ -156,11 +208,11 @@ found:
   p->etime = 0;
 
   p->curr_q = 0; 
-  p->q_0 = 0;
-  p->q_1 = 0;
-  p->q_2 = 0;
-  p->q_3 = 0;
-  p->q_4 = 0;
+  p->q_val[0] = 0;
+  p->q_val[1] = 0;
+  p->q_val[2] = 0;
+  p->q_val[3] = 0;
+  p->q_val[4] = 0;
 
   // saving creation time as ctime
   p->ctime = ticks;
@@ -189,6 +241,7 @@ freeproc(struct proc *p)
   p->xstate = 0;
   p->state = UNUSED;
   p->mask = 0;
+  p->atime = 0;
   p->ctime = 0;
   p->rtime = 0;
   p->rtime_whole = 0;
@@ -200,11 +253,11 @@ freeproc(struct proc *p)
   p->niceness = 0;
   p->nrun = 0;
   p->curr_q = 0;
-  p->q_0 = 0;
-  p->q_1 = 0;
-  p->q_2 = 0;
-  p->q_3 = 0;
-  p->q_4 = 0;
+  p->q_val[0] = 0;
+  p->q_val[1] = 0;
+  p->q_val[2] = 0;
+  p->q_val[3] = 0;
+  p->q_val[4] = 0;
 }
 
 // Create a user page table for a given process,
@@ -266,6 +319,8 @@ uchar initcode[] = {
 void
 userinit(void)
 {
+  init_queues();
+
   struct proc *p;
 
   p = allocproc();
@@ -284,6 +339,10 @@ userinit(void)
   p->cwd = namei("/");
 
   p->state = RUNNABLE;
+
+  #ifdef MLFQ
+    push(p, 0);
+  #endif
 
   release(&p->lock);
 }
@@ -357,6 +416,11 @@ fork(void)
 
   acquire(&np->lock);
   np->state = RUNNABLE;
+
+  #ifdef MLFQ
+    push(np, 0);
+  #endif
+
   release(&np->lock);
 
   return pid;
@@ -569,6 +633,58 @@ scheduler(void)
       release(&p->lock);
     }
     #endif
+
+    #ifdef MLFQ
+    
+    for(int i = 0; i< 5; i++)
+      for(int j = 0; j<q_index[i]+1; j++)
+        if(queues[i][j]->atime > AGE_LIMIT)
+        {
+          p = queues[i][j];
+          pop(p);
+          push(p, i-1);
+        }
+    
+    p = 0;
+    for(int i = 0; i< 5; i++)
+    {
+      for(int j = 0; j<q_index[i]+1; j++)
+      {
+        if(queues[i][j]->state == RUNNABLE)
+        {
+          p = queues[i][j];
+          break;
+        }
+      }
+      if(p!=0)
+        break;
+    }
+    if(p != 0)
+    {
+      acquire(&p->lock);
+      // printf("%d before I am %d \n",p->pid, p->state);
+       if(p->state == RUNNABLE) {
+        // Switch to chosen process.  It is the process's job
+        // to release its lock and then reacquire it
+        // before jumping back to us.
+        // printf("%d run I am %d \n",p->pid, p->state);
+        p->state = RUNNING;
+        p->rtime = 0;
+        p->wtime = 0;
+        p->nrun++;
+        p->atime = 0;
+        p->q_val[p->curr_q]++;
+        c->proc = p;
+        swtch(&c->context, &p->context);
+
+        // Process is done running for now.
+        // It should have changed its p->state before coming back.
+        c->proc = 0;
+      }
+      release(&p->lock);
+    }
+      
+    #endif
   }
 }
 
@@ -695,6 +811,9 @@ kill(int pid)
       if(p->state == SLEEPING){
         // Wake process from sleep().
         p->state = RUNNABLE;
+        #ifdef MLFQ
+        push(p, 0);
+        #endif
       }
       release(&p->lock);
       return 0;

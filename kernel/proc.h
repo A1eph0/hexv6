@@ -108,6 +108,7 @@ struct proc {
 
   // added by me from here on
   int mask;
+  uint64 atime;
   uint64 ctime;
   uint64 stime;
   uint64 rtime;
@@ -123,9 +124,5 @@ struct proc {
   int nrun;
 
   int curr_q;
-  int q_0;
-  int q_1;
-  int q_2;
-  int q_3;
-  int q_4;
+  int q_val[5];
 };

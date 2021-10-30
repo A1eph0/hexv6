@@ -107,6 +107,8 @@ void            procdump(void);
 void            update_vals(void);
 void            priority_updater(int new_priority, int pid);
 int             waitx(uint64, uint*, uint*);
+void            push(struct proc*, int);
+void            pop(struct proc*);
 
 // swtch.S
 void            swtch(struct context*, struct context*);

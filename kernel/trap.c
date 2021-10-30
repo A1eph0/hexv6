@@ -16,6 +16,8 @@ void kernelvec();
 
 extern int devintr();
 
+uint64 q_tick[5] = {1, 2, 4, 8, 16};
+
 void
 trapinit(void)
 {
@@ -75,11 +77,22 @@ usertrap(void)
 
   if(p->killed)
     exit(-1);
-
-  #ifdef DEFAULT
+  
   // give up the CPU if this is a timer interrupt.
+  #ifdef DEFAULT
+  
   if(which_dev == 2)
     yield();
+  #endif
+
+  #ifdef MLFQ
+  if(which_dev == 2)
+  {
+    pop(p);
+    int q = p->curr_q+1;
+    push(p, q);
+    yield();
+  }
   #endif
 
   usertrapret();
@@ -156,6 +169,19 @@ kerneltrap()
   if(which_dev == 2 && myproc() != 0 && myproc()->state == RUNNING)
     yield();
   #endif
+  
+  // #ifdef MLFQ
+  if(which_dev == 2 && myproc() != 0 && myproc()->state == RUNNING){
+    struct proc *p = myproc();
+    if(p->rtime > q_tick[p->curr_q])
+    {
+      pop(p);
+      int q = p->curr_q+1;
+      push(p, q);
+      yield();
+    }
+  }
+  // #endif
 
   // the yield() may have caused some traps to occur,
   // so restore trap registers for use by kernelvec.S's sepc instruction.
