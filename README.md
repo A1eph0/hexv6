@@ -13,7 +13,7 @@ The extensions to the OS include:
 * `setpriority` function, which changes the static priority of a given process.
 * `schedulertest` command to run predefined tasks to test the scheduling policies. Note that the test needs `waitx` system call.
 
-For instructions running, click [here](##Running-the-OS).
+For instructions running, click [here](#running-the-os).
 
 ## Syscall Tracing via `strace`
 * `strace` traces the the system calls called by a given command during execution, till exit.
@@ -92,7 +92,7 @@ For instructions running, click [here](##Running-the-OS).
 * The `waitx` system call used by the `schedulertest` is implemented in a manner similar to `strace`.
 
 #### Performance comparison
-* For comparing performance, for each scheduling policy, `scheculertest` was run with `CPUS=1`
+* For comparing performance, for each scheduling policy, `schedulertest` was run with `CPUS=1`
 * The results are as demonstrated:
 
     | Scheduler | Average Run Time | Average Wait Time |
