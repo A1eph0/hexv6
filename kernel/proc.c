@@ -20,7 +20,7 @@ static void freeproc(struct proc *p);
 
 extern char trampoline[]; // trampoline.S
 
-#define AGE_LIMIT 64
+#define AGE_LIMIT 30
 
 struct proc *queues[5][NPROC];
 uint64 q_index[5] = {-1, -1, -1, -1, -1};
@@ -943,11 +943,13 @@ update_vals()
     {
       p->rtime++;
       p->rtime_every++;
+      p->rtime_whole++;
     }
     else
     {
       p->wtime++;
       p->wtime_every++;
+      p->wtime_whole++;
     }
 
     if(p->rtime != 0 || p->stime !=0)
@@ -964,7 +966,7 @@ update_vals()
   }
 }
 
-void
+uint64
 priority_updater(int new_priority, int pid)
 {
   int temp = -1;
@@ -982,6 +984,7 @@ priority_updater(int new_priority, int pid)
   
   if(temp != -1 && temp > new_priority)
     yield();
+  return temp;
 }
 
 int

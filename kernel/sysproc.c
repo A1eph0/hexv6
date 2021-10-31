@@ -124,9 +124,9 @@ sys_set_priority(void)
   argint(0, &new_priority);
   argint(0, &pid);
   
-  priority_updater(new_priority, pid);
+  uint64 temp = priority_updater(new_priority, pid);
 
-  return 0;
+  return temp;
 }
 
 uint64

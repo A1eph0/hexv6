@@ -170,7 +170,7 @@ kerneltrap()
     yield();
   #endif
   
-  // #ifdef MLFQ
+  #ifdef MLFQ
   if(which_dev == 2 && myproc() != 0 && myproc()->state == RUNNING){
     struct proc *p = myproc();
     if(p->rtime > q_tick[p->curr_q])
@@ -181,7 +181,7 @@ kerneltrap()
       yield();
     }
   }
-  // #endif
+  #endif
 
   // the yield() may have caused some traps to occur,
   // so restore trap registers for use by kernelvec.S's sepc instruction.
